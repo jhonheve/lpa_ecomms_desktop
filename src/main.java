@@ -840,7 +840,12 @@ public class main extends JFrame {
 							+ "lpa_stock_price,"
 							+ "lpa_stock_status) " + 
 							"VALUES ('"
-							+ txtStockID.getText() + "'"); 
+							+ txtStockID.getText() + "',"
+							+ txtStockName.getText() + "',"
+							+ txtStockDes.getText() + "',"
+							+ txtStockOnHand.getText() + "',"
+							+ txtStockPrice.getText() + "')"							
+					); 
 					//complete the sql statement, matching database coln names and corresponding values
 				} else {
 					st.executeUpdate(
