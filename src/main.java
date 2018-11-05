@@ -413,7 +413,7 @@ public class main extends JFrame {
 		JButton btnStockSave = new JButton("Save");
 		btnStockSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				//call relevant function(txtStockID.getText());
+				saveStockData(txtStockID.getText());
 			}
 		});
 		btnStockSave.setForeground(Color.WHITE);
@@ -428,6 +428,8 @@ public class main extends JFrame {
 		btnDeleteStock = new JButton("Delete");
 		btnDeleteStock.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				deleteStock(txtStockID.getText());
+				
 				//call relevant function(txtStockID.getText());
 			}
 
@@ -453,7 +455,7 @@ public class main extends JFrame {
 				txtStockSearch = new JTextField();
 				txtStockSearch.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
-						searchStockData(txtStockSearch.getText().toString());
+						saveStockData(txtStockSearch.getText().toString());
 					}
 				});
 				txtStockSearch.setForeground(Color.WHITE);
@@ -832,21 +834,19 @@ public class main extends JFrame {
 			if(validateStockInfo())
 			{
 				if(saveMode == "new") {
-					st.executeUpdate("INSERT INTO lpa_stock "
+					String _query = "INSERT INTO lpa_stock "
 							+ "(lpa_stock_ID,"
 							+ "lpa_stock_name,"
 							+ "lpa_stock_desc,"
 							+ "lpa_stock_onhand,"
-							+ "lpa_stock_price,"
-							+ "lpa_stock_status) " + 
-							"VALUES ('"
-							+ txtStockID.getText() + "',"
-							+ txtStockName.getText() + "',"
-							+ txtStockDes.getText() + "',"
-							+ txtStockOnHand.getText() + "',"
-							+ txtStockPrice.getText() + "')"							
-					); 
-					//complete the sql statement, matching database coln names and corresponding values
+							+ "lpa_stock_price" +
+							") VALUES ('"
+							+ txtStockID.getText() + "','"
+							+ txtStockName.getText() + "','"
+							+ txtStockDes.getText() + "','"
+							+ txtStockOnHand.getText() + "','"
+							+ txtStockPrice.getText() + "')";
+					st.executeUpdate(_query);
 				} else {
 					st.executeUpdate(
 							"UPDATE lpa_stock SET " + 
@@ -1571,22 +1571,35 @@ public class main extends JFrame {
 	
 	public void saveInvoice() {
 		try {
-			int invoiceNumber = genID();
-			
+			int invoiceNumber = genID();			
 			SimpleDateFormat sDF = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-			st.executeUpdate(
-					"INSERT INTO lpa_invoices (lpa_inv_no,lpa_inv_date,lpa_inv_client_ID,lpa_inv_client_name,lpa_inv_amount,lpa_inv_client_address,lpa_inv_status) "
-							+ "VALUES (" + invoiceNumber + ",'" + sDF.format(new Date()) + "','" + txtCliendId.getText()
-							+ "','" + txtName.getText() + "'," + totalAmountInvoice + ",'"+txtAddress.getText() +"','A');");
+			String query ="INSERT INTO lpa_invoices (lpa_inv_no,lpa_inv_date,lpa_inv_client_ID,lpa_inv_client_name,lpa_inv_amount,lpa_inv_client_address,lpa_inv_status) "
+					+ "VALUES (" + invoiceNumber + ",'" + sDF.format(new Date()) + "','" + txtCliendId.getText()
+					+ "','" + txtName.getText() + "'," + totalAmountInvoice + ",'"+txtAddress.getText() +"','A');";
+			
+			st.executeUpdate(query);
 			
 			for(int row = 0;row < invoicedTtems.getRowCount();row++) {
+				String subQuery=
+						"INSERT INTO lpa_invoice_items (lpa_invitem_no,"
+						+ "lpa_invitem_inv_no,"
+						+ "lpa_invitem_stock_ID,"
+						+"lpa_invitem_stock_name,"
+						+ "lpa_invitem_qty,"
+						+ "lpa_invitem_stock_price,"
+						+ "lpa_invitem_stock_amount,"
+						+ "lpa_inv_status"
+						+ ") "
+						+"VALUES ('"+ genID() + "','"
+								+invoiceNumber+"',"
+								+ "'"+invoicedTtems.getValueAt(row, 0)+"',"
+								+ "'"+invoicedTtems.getValueAt(row, 1)+"','"+
+								invoicedTtems.getValueAt(row, 3)+"',"
+								+invoicedTtems.getValueAt(row, 2)
+								+","+invoicedTtems.getValueAt(row, 4)+","
+								+ "'a');";
 				
-				st.executeUpdate(
-						"INSERT INTO lpa_invoice_items (lpa_invitem_inv_no,lpa_invitem_stock_ID,"
-						+"lpa_invitem_stock_name,lpa_invitem_qty,lpa_invitem_stock_price,lpa_invitem_stock_amount,lpa_inv_status) "
-								+"VALUES (" +invoiceNumber+","+invoicedTtems.getValueAt(row, 0)+",'"+invoicedTtems.getValueAt(row, 1)+"',"+
-								invoicedTtems.getValueAt(row, 3)+","+invoicedTtems.getValueAt(row, 2)+","+invoicedTtems.getValueAt(row, 4)
-								+",'a');");
+				st.executeUpdate(subQuery);
 				}
 
 			searchInvoicesData(txtSalesSearch.getText().toString());
@@ -1724,12 +1737,13 @@ public class main extends JFrame {
 	
 	private void searchClientsData(String searchData) {
 		try {
+			
+			String query="SELECT * FROM lpa_clients WHERE lpa_client_status <> 'D' AND " + //insert appropriate condition
+				    "(lpa_client_ID LIKE '%" + searchData + "%' OR " +
+				    "lpa_client_firstname LIKE '%" + searchData + "%' OR lpa_client_lastname LIKE '%"+ searchData + "%');"; 
 
-			ResultSet rs = (ResultSet) st.executeQuery(
-				"SELECT * FROM lpa_clients WHERE lpa_client_status  'D' AND " + //insert appropriate condition
-			    "(lpa_client_ID LIKE '%" + searchData + "%' OR " +
-			    "lpa_client_firstname LIKE '%" + searchData + "%' OR lpa_client_lastname LIKE '%"+ searchData + "%');" 
-			);
+			ResultSet rs = (ResultSet) st.executeQuery(query);
+			
 			if(rs.next()) {
 			 clientsModel = (DefaultTableModel) tblSearchClients.getModel();
 			 clientsModel.getDataVector().removeAllElements();
