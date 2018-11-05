@@ -332,7 +332,7 @@ public class main extends JFrame {
 		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
 		
 		
-		//tblSearchStock.getTableHeader().getColumnModel().getColumn(2).setHeaderRenderer(centerRenderer);
+		//////tblSearchStock.getTableHeader().getColumnModel().getColumn(2).setHeaderRenderer(centerRenderer);
 		//tblSearchStock.getTableHeader().getColumnModel().getColumn(3).setHeaderRenderer(rightRenderer);
 		
 		
